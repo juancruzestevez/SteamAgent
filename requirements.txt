@@ -1,0 +1,22 @@
+# --- CORE ---
+langchain>=0.3.0
+langchain-community>=0.4.0
+langchain-core>=1.4.0
+langchain-classic>=1.0.0
+langchain-google-genai>=4.2.0
+langchain-groq>=0.2.0            # Alternativa gratuita (Llama 3)
+
+# --- IA & LLM ---
+google-generativeai>=0.8.0
+langchain-openai>=0.1.0
+langchain-anthropic>=0.1.0
+
+# --- TOOLS & SERVICES ---
+requests>=2.31.0                 # Para la API de Steam
+ddgs>=9.14.0                     # Para la herramienta de búsqueda web
+youtube-transcript-api>=0.6.0    # (Para la Card 1.2 próximamente)
+
+# --- UTILS ---
+python-dotenv>=1.0.0             # Gestión de .env
+pydantic>=2.10.0                 # Validación de datos
+pydantic-settings>=2.7.0         # BaseSettings (config desde .env)

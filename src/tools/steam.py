@@ -1,0 +1,83 @@
+import logging
+
+from langchain_core.tools import Tool
+from src.api.steam_client import SteamAPI
+
+logger = logging.getLogger(__name__)
+
+_steam_api: SteamAPI | None = None
+
+
+def _get_steam_api() -> SteamAPI:
+    """Inicialización perezosa de la instancia de SteamAPI."""
+    global _steam_api
+    if _steam_api is None:
+        _steam_api = SteamAPI()
+    return _steam_api
+
+
+def get_profile_tool(query: str) -> str:
+    """Obtiene información del perfil de Steam."""
+    logger.debug("Herramienta invocada: get_steam_profile")
+    result = _get_steam_api().get_player_summary()
+    if "error" in result:
+        logger.error("Error al obtener perfil: %s", result['error'])
+        return f"Error: {result['error']}"
+    logger.debug("Perfil obtenido: %s", result.get('personaname', 'N/A'))
+    return f"""Información del Perfil:
+- Nombre: {result.get('personaname', 'N/A')}
+- Estado: {'🟢 Conectado' if result.get('personastate') == 1 else '⚫ Desconectado'}
+- Perfil: {result.get('profileurl', 'N/A')}
+- País: {result.get('loccountrycode', 'N/A')}"""
+
+def get_games_tool(query: str) -> str:
+    """Obtiene la lista de juegos del usuario."""
+    logger.debug("Herramienta invocada: get_steam_games")
+    result = _get_steam_api().get_owned_games()
+    if "error" in result:
+        logger.error("Error al obtener juegos: %s", result['error'])
+        return f"Error: {result['error']}"
+    games = sorted(result.get('games', []), key=lambda x: x.get('playtime_forever', 0), reverse=True)
+    top_games = games[:10]
+    logger.debug("Juegos obtenidos: %d total, mostrando top 10", result.get('game_count', 0))
+    response = f"Total de juegos: {result.get('game_count', 0)}\n\nTop 10 juegos más jugados:\n"
+    for i, game in enumerate(top_games, 1):
+        hours = game.get('playtime_forever', 0) / 60
+        response += f"{i}. {game.get('name', 'N/A')} - {hours:.1f} horas\n"
+    return response
+
+def get_achievements_tool(game_name: str) -> str:
+    """Obtiene logros de un juego específico."""
+    logger.debug("Herramienta invocada: get_steam_achievements (juego='%s')", game_name)
+    owned_games = _get_steam_api().get_owned_games()
+    if "error" in owned_games:
+        logger.error("Error al obtener juegos para logros: %s", owned_games['error'])
+        return f"Error: {owned_games['error']}"
+    game_found = _get_steam_api().search_game_by_name(game_name, owned_games.get('games', []))
+    if not game_found:
+        logger.warning("Juego no encontrado para logros: '%s'", game_name)
+        return f"No se encontró el juego '{game_name}'"
+    
+    result = _get_steam_api().get_player_achievements(game_found['appid'])
+    if "error" in result:
+        logger.error("Error al obtener logros de '%s': %s", game_name, result['error'])
+        return f"Error: {result['error']}"
+    
+    achievements = result.get('achievements', [])
+    unlocked = sum(1 for ach in achievements if ach.get('achieved') == 1)
+    total = len(achievements)
+    logger.debug("Logros de %s: %d/%d desbloqueados", game_found['name'], unlocked, total)
+    response = f"Logros de {game_found['name']}: {unlocked}/{total}\n"
+    recent = sorted([a for a in achievements if a.get('achieved') == 1], 
+                    key=lambda x: x.get('unlocktime', 0), reverse=True)[:5]
+    for ach in recent:
+        response += f"✅ {ach.get('name', 'N/A')}\n"
+    return response
+
+def get_steam_tools():
+    """Devuelve la lista de herramientas de Steam disponibles para el agente."""
+    return [
+        Tool(name="get_steam_profile", func=get_profile_tool, description="Obtiene información del perfil del usuario de Steam."),
+        Tool(name="get_steam_games", func=get_games_tool, description="Obtiene la lista de juegos y horas jugadas del usuario."),
+        Tool(name="get_steam_achievements", func=get_achievements_tool, description="Obtiene logros de un juego. Input: nombre exacto del juego.")
+    ]
