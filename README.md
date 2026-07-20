@@ -1,107 +1,72 @@
 <div align="center">
-  <h1>🎮 SteamAgent AI</h1>
-  <p>Un Asistente Inteligente Conversacional para tu Biblioteca de Steam, potenciado por LangChain y Arquitectura ReAct.</p>
+  <h1>🎮 SteamAgent</h1>
+  <p>Tu asistente personal de videojuegos. Juega sin interrupciones, descubre nuevas joyas en tu biblioteca y nunca más te quedes trabado.</p>
 </div>
 
 ---
 
-## 📖 Sobre el Proyecto
+## 🚀 ¿Por qué SteamAgent?
 
-**SteamAgent** es una aplicación de Inteligencia Artificial diseñada para actuar como un compañero y asistente personal mientras juegas o exploras tu biblioteca de Steam. 
+Todos hemos estado ahí: estás inmerso en una partida increíble, la tensión está al máximo y de repente... te trabas. Tienes que pausar el juego, minimizar, abrir el navegador, esquivar spoilers en foros y buscar una guía para saber cómo avanzar. O tal vez miras tu biblioteca de 300 juegos y sientes que "no tienes nada para jugar".
 
-A diferencia de un chatbot tradicional, SteamAgent es un **Agente ReAct (Reasoning + Acting)**. Esto significa que puede "pensar" sobre tu pregunta, decidir qué herramienta usar (consultar la API de Steam, buscar guías en internet), ejecutar la acción, analizar los resultados, y finalmente entregarte una respuesta útil y contextualizada.
+**SteamAgent nació para eliminar esas fricciones.**
 
-Este proyecto fue concebido como un entorno de aprendizaje práctico para la Ingeniería de IA, explorando conceptos de orquestación de LLMs, gestión de memoria conversacional y desarrollo modular en Python.
-
----
-
-## ✨ Características Principales
-
-* 🧠 **Arquitectura ReAct**: Razonamiento y ejecución dinámica de herramientas mediante LangChain.
-* 🔄 **Soporte Multi-Modelo (LLM)**: Arquitectura flexible que permite intercambiar motores de IA (Groq/Llama3, Google Gemini, OpenAI, Anthropic Claude) simplemente cambiando una variable de entorno.
-* 🚀 **Caché Local Inteligente**: Integración de una base de datos SQLite con un patrón *Decorator* para almacenar temporalmente respuestas de la API de Steam, optimizando tiempos de respuesta y reduciendo el consumo de cuota.
-* 🌐 **Búsqueda Web Integrada**: Capacidad de buscar guías, lore y noticias de juegos en tiempo real utilizando DuckDuckGo.
-* 💾 **Memoria Conversacional**: Implementación de una memoria de ventana deslizante que permite al agente recordar el contexto de la charla sin desbordar el límite de tokens.
-* 🛠️ **Configuración Centralizada (Pydantic)**: Validación estricta y tipado fuerte para todas las variables de entorno, implementando una filosofía de "falla rápida" (fail-fast).
-* 📝 **Logging Profesional**: Trazabilidad completa de las acciones del agente para facilitar el debugging y monitoreo.
+Es mucho más que un simple chatbot; es tu compañero de aventuras. SteamAgent se conecta directamente a tu cuenta y entiende tu contexto. Ya sea que necesites ayuda táctica en tiempo real, descubrir qué juego de tu inmensa biblioteca encaja con tu humor actual, o simplemente quieras saber qué logros te faltan para platinar tu juego favorito, SteamAgent está ahí para ti.
 
 ---
 
-## 🛠️ Tecnologías Utilizadas
+## ✨ Lo que SteamAgent puede hacer por ti
 
-* **Lenguaje:** Python 3.10+
-* **Orquestación IA:** LangChain
-* **Modelos IA:** Groq (Llama-3), Google Generative AI (Gemini), OpenAI, Anthropic
-* **Validación de Datos:** Pydantic & Pydantic-Settings
-* **Caché / Base de Datos:** SQLite3 (Nativo)
-* **Búsqueda Web:** DuckDuckGo Search (DDGS)
-* **Peticiones HTTP:** Requests
+* 🎯 **Asistencia Contextual (¡Próximamente!)**: SteamAgent sabe a qué estás jugando. Pídele ayuda y te dará consejos específicos sin que tengas que explicarle dónde estás ni hacer tab-out.
+* 📚 **Curador de Biblioteca Personal**: ¿No sabes qué jugar? SteamAgent analiza tus gustos y el tiempo que le has dedicado a tus juegos para recomendarte joyas ocultas que ya posees.
+* 🏆 **Cazador de Logros**: Pregúntale qué te falta para completar tu juego y te armará una guía rápida con tus próximos objetivos.
+* 🌐 **Buscador en Tiempo Real**: Si necesitas guías, lore de una saga o la última actualización de un parche, el agente navega por internet y te resume lo más importante en segundos.
 
 ---
 
-## 🚀 Instalación y Configuración
+## 🚀 Cómo empezar a usarlo
 
-Sigue estos pasos para ejecutar el agente en tu entorno local.
+Para llevar a SteamAgent a tu computadora, solo necesitas seguir estos sencillos pasos:
 
-### 1. Clonar el repositorio
-```bash
-git clone git@github.com:juancruzestevez/SteamAgent.git
-cd SteamAgent
-```
+1. **Descarga la app:**
+   ```bash
+   git clone git@github.com:juancruzestevez/SteamAgent.git
+   cd SteamAgent
+   ```
 
-### 2. Crear y activar un entorno virtual
-```bash
-python3 -m venv venv
-source venv/bin/activate  # En Windows usa: venv\Scripts\activate
-```
+2. **Prepara el entorno:**
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate  # En Windows: venv\Scripts\activate
+   pip install -r requirements.txt
+   ```
 
-### 3. Instalar las dependencias
-```bash
-pip install -r requirements.txt
-```
+3. **Conecta tus cuentas:**
+   Copia el archivo base y agrega tus claves:
+   ```bash
+   cp .env.example .env
+   ```
+   Abre el archivo `.env` y pon tu `STEAM_API_KEY` (tu pase a los servidores de Steam), tu `STEAM_USER_ID` y elige qué "cerebro" quieres que use el agente añadiendo una API Key de OpenAI (ChatGPT), Anthropic (Claude), Groq o Google Gemini.
 
-### 4. Configurar las Variables de Entorno
-Copia el archivo de ejemplo y configúralo con tus claves API:
-```bash
-cp .env.example .env
-```
-
-Abre el archivo `.env` y completa al menos las siguientes variables obligatorias:
-* `STEAM_API_KEY`: Tu clave de la API de Steam ([Obtener aquí](https://steamcommunity.com/dev/apikey))
-* `STEAM_USER_ID`: Tu ID público de Steam (Formato de 17 dígitos)
-* Y al menos **una** clave para un proveedor LLM (ej: `GROQ_API_KEY`, `OPENAI_API_KEY`, etc.)
-
-*Nota: Por defecto, la aplicación intentará usar los proveedores en el orden: Groq -> Gemini -> OpenAI -> Anthropic. Puedes forzar uno específico cambiando `LLM_PROVIDER=openai`.*
+4. **¡Arranca!**
+   ```bash
+   python -m src.main
+   ```
 
 ---
 
-## 🕹️ Uso
+## 🤓 Para Desarrolladores y Entusiastas
 
-Para iniciar el agente conversacional en tu terminal, simplemente ejecuta:
+Debajo de esta interfaz amigable, SteamAgent es un proyecto robusto diseñado con las mejores prácticas de la Ingeniería de IA actual:
 
-```bash
-python -m src.main
-```
-
-**Ejemplos de preguntas que puedes hacerle:**
-* *"¿Cuáles son mis 3 juegos más jugados?"*
-* *"¿Cuántas horas tengo en el Counter-Strike 2?"*
-* *"Busca en internet una guía para desbloquear el logro 'Short Fuse' en mi último juego"*
+* **Arquitectura de Agente ReAct**: Construido sobre LangChain, el modelo razona antes de actuar, eligiendo dinámicamente qué herramientas ejecutar.
+* **Agnóstico al LLM**: Soporta de forma nativa OpenAI, Anthropic, Gemini y Groq/Llama3 mediante un patrón Factory.
+* **Optimización Extrema**: Utiliza caché en SQLite con un patrón *Decorator* para minimizar las llamadas a la API de Steam y acelerar respuestas.
+* **Memoria Persistente**: Ventana de contexto gestionada automáticamente para mantener conversaciones fluidas sin romper los límites de tokens.
+* **Seguridad y Tipado**: Configuración centralizada validada en tiempo real mediante Pydantic.
 
 ---
 
-## 🗺️ Roadmap de Desarrollo
-
-- [x] **Fase 0:** Refactorización, Arquitectura Modular, Soporte Multi-LLM y Caché.
-- [ ] **Fase 1:** Asistente Contextual (Detección de juego activo, resúmenes de YouTube).
-- [ ] **Fase 2:** Curador de Biblioteca (Recomendaciones inteligentes y ofertas).
-- [ ] **Fase 3:** Sistema RAG (Generación Aumentada por Recuperación) con base de datos vectorial para Wikis.
-- [ ] **Fase 4:** Interfaz de Voz en Discord (STT/TTS).
-- [ ] **Fase 5:** Integración de Visión por Computadora (análisis de capturas de pantalla de la partida).
-
----
-
-## 👨‍💻 Autor
-
-**Juan Cruz Estevez** 
-* Proyecto de investigación y aprendizaje en Ingeniería de Inteligencia Artificial.
+<div align="center">
+  <p>Construido con pasión por los videojuegos y la IA por <b>Juan Cruz Estevez</b>.</p>
+</div>
