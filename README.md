@@ -57,13 +57,25 @@ Para llevar a SteamAgent a tu computadora, solo necesitas seguir estos sencillos
 
 ## 🤓 Para Desarrolladores y Entusiastas
 
-Debajo de esta interfaz amigable, SteamAgent es un proyecto robusto diseñado con las mejores prácticas de la Ingeniería de IA actual:
+Debajo de esta interfaz amigable, SteamAgent es un proyecto robusto diseñado con las mejores prácticas de la Ingeniería de IA actual. Si te interesa el código, esto es lo que encontrarás:
 
-* **Arquitectura de Agente ReAct**: Construido sobre LangChain, el modelo razona antes de actuar, eligiendo dinámicamente qué herramientas ejecutar.
-* **Agnóstico al LLM**: Soporta de forma nativa OpenAI, Anthropic, Gemini y Groq/Llama3 mediante un patrón Factory.
-* **Optimización Extrema**: Utiliza caché en SQLite con un patrón *Decorator* para minimizar las llamadas a la API de Steam y acelerar respuestas.
-* **Memoria Persistente**: Ventana de contexto gestionada automáticamente para mantener conversaciones fluidas sin romper los límites de tokens.
-* **Seguridad y Tipado**: Configuración centralizada validada en tiempo real mediante Pydantic.
+### 1. Arquitectura de Agente ReAct (LangChain)
+En lugar de procesar un prompt linealmente, el agente utiliza el patrón **ReAct (Reasoning and Acting)**. Esto se traduce en un bucle donde el LLM:
+1. Piensa sobre la solicitud del usuario (Thought).
+2. Selecciona una herramienta para obtener contexto real (Action).
+3. Analiza el resultado devuelto por la herramienta (Observation).
+4. Repite el proceso o entrega una respuesta final si ya posee los datos necesarios.
+
+### 2. Multi-Provider Híbrido (Patrón Factory)
+El sistema es agnóstico al modelo de lenguaje. Mediante la clase `SteamAgent` implementamos un patrón similar a un Factory que instancia dinámicamente conectores de LangChain (`ChatGroq`, `ChatGoogleGenerativeAI`, `ChatOpenAI`, `ChatAnthropic`) basándose en una validación estricta de variables de entorno, priorizando el proveedor preferido sin modificar la lógica interna.
+
+### 3. Caché SQLite Decorado (Optimización)
+Para evitar saturar la cuota de la API de Steam y lograr tiempos de respuesta de milisegundos, implementamos un sistema de caché persistente. 
+La magia ocurre en `cache_manager.py`, donde un **Decorator** de Python (`@cached`) intercepta las llamadas HTTP, verifica el *Time-To-Live (TTL)* en una base local SQLite, y decide si hacer la petición web o retornar la data parseada directamente desde disco.
+
+### 4. Gestión de Memoria y Pydantic
+* **Context Window**: Se utiliza `ConversationBufferWindowMemory` para pasar el historial de conversación en el prompt template sin desbordar el límite de tokens del LLM.
+* **Seguridad (Fail-Fast)**: Toda la configuración hereda de `BaseSettings` (Pydantic), garantizando que cualquier error de entorno impida el arranque de la app, salvaguardando contra errores impredecibles en runtime.
 
 ---
 
