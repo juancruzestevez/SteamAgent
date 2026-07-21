@@ -74,10 +74,31 @@ def get_achievements_tool(game_name: str) -> str:
         response += f"✅ {ach.get('name', 'N/A')}\n"
     return response
 
+def get_current_game_tool(query: str = "") -> str:
+    """Obtiene el juego que el usuario está jugando actualmente."""
+    logger.debug("Herramienta invocada: get_current_game")
+    result = _get_steam_api().get_player_summary()
+    
+    if "error" in result:
+        logger.error("Error al obtener perfil para el juego actual: %s", result['error'])
+        return f"Error: {result['error']}"
+    
+    game_title = result.get('gameextrainfo')
+    game_id = result.get('gameid')
+    
+    if game_title:
+        logger.debug("Juego actual detectado: %s", game_title)
+        return f"🎮 El usuario está jugando actualmente a: '{game_title}' (AppID: {game_id}). Usa esta información para darle contexto."
+    
+    logger.debug("El usuario no está jugando a nada")
+    return "El usuario no está jugando a ningún juego en este momento o su perfil está oculto."
+
+
 def get_steam_tools():
     """Devuelve la lista de herramientas de Steam disponibles para el agente."""
     return [
         Tool(name="get_steam_profile", func=get_profile_tool, description="Obtiene información del perfil del usuario de Steam."),
         Tool(name="get_steam_games", func=get_games_tool, description="Obtiene la lista de juegos y horas jugadas del usuario."),
-        Tool(name="get_steam_achievements", func=get_achievements_tool, description="Obtiene logros de un juego. Input: nombre exacto del juego.")
+        Tool(name="get_steam_achievements", func=get_achievements_tool, description="Obtiene logros de un juego. Input: nombre exacto del juego."),
+        Tool(name="get_current_game", func=get_current_game_tool, description="Verifica si el usuario está jugando a algún juego en este momento y devuelve su nombre.")
     ]
