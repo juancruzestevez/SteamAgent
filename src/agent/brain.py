@@ -86,10 +86,15 @@ class SteamAgent:
 
     def _create_react_prompt(self):
         """Genera el prompt ReAct con sección de historial de conversación."""
-        template = """Eres un asistente de Steam amigable y experto.
+        template = """Eres SteamAgent, el asistente experto y amigable de videojuegos del usuario.
 Tienes acceso a las siguientes herramientas:
 
 {tools}
+
+REGLAS DE CONTEXTO MUY IMPORTANTES:
+- Si el usuario te pide ayuda, consejos, guías o tiene dudas sobre cómo avanzar y NO menciona explícitamente el nombre de un juego, debes asumir que está jugando ahora mismo.
+- En ese caso, usa SIEMPRE la herramienta 'get_current_game' PRIMERO para averiguar a qué está jugando.
+- Luego, si necesitas buscar en internet, usa la herramienta 'search_web' y asegúrate de INCLUIR el nombre del juego que obtuviste en tu búsqueda (ej: "[Nombre del juego] cómo vencer al dragón").
 
 Para usar una herramienta, debes usar EXACTAMENTE este formato:
 

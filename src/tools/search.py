@@ -29,5 +29,9 @@ def search_web_tool(query: str) -> str:
 def get_search_tools():
     """Devuelve la lista de herramientas de búsqueda web disponibles."""
     return [
-        Tool(name="search_web", func=search_web_tool, description="Útil para buscar información en internet sobre juegos, guías, lore o noticias actuales.")
+        Tool(
+            name="search_web", 
+            func=search_web_tool, 
+            description="Útil para buscar información en internet sobre juegos, guías, lore o noticias actuales. IMPORTANTE: Si la pregunta es sobre un juego (ej: cómo derrotar un jefe), asegúrate de INCLUIR EL NOMBRE DEL JUEGO en tu término de búsqueda (ej: 'Elden Ring cómo derrotar jefe')."
+        )
     ]
