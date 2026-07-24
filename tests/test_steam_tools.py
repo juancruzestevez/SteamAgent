@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import patch, MagicMock
 
 # Importamos las herramientas a testear
-from src.tools.steam import get_profile_tool, get_games_tool, get_current_game_tool
+from src.tools.steam import get_profile_tool, get_games_tool, get_current_game_tool, get_store_info_tool
 
 # --- Tests ---
 @patch("src.tools.steam._get_steam_api")
@@ -82,3 +82,35 @@ def test_get_current_game_tool_not_playing(mock_get_api):
 
     result = get_current_game_tool("")
     assert "no está jugando a ningún juego" in result
+
+@patch("src.tools.steam._get_steam_api")
+def test_get_store_info_tool_success(mock_get_api):
+    """Verifica que recupere la información de la tienda correctamente."""
+    mock_api = MagicMock()
+    # Mock search
+    mock_api.search_store_game.return_value = {
+        "items": [{"id": 1091500}]
+    }
+    # Mock details
+    mock_api.get_store_app_details.return_value = {
+        "1091500": {
+            "success": True,
+            "data": {
+                "name": "Cyberpunk 2077",
+                "short_description": "Un RPG de acción...",
+                "price_overview": {
+                    "final_formatted": "ARS$ 2000",
+                    "discount_percent": 50
+                },
+                "platforms": {"windows": True, "mac": False, "linux": False},
+                "categories": [{"description": "Un jugador"}]
+            }
+        }
+    }
+    mock_get_api.return_value = mock_api
+
+    result = get_store_info_tool("Cyberpunk")
+    assert "Cyberpunk 2077" in result
+    assert "ARS$ 2000 (-50%)" in result
+    assert "Windows" in result
+    assert "Un jugador" in result

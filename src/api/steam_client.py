@@ -92,13 +92,62 @@ class SteamAPI:
         result = self._make_request(endpoint, params)
         return result.get("response", {}) if "error" not in result else result
     
-    def search_game_by_name(self, game_name: str, owned_games: List[Dict]) -> Optional[Dict]:
-        """Busca un juego por nombre en la lista de juegos del usuario."""
-        logger.debug("Buscando juego '%s' entre %d juegos", game_name, len(owned_games))
+    def search_game_by_name(self, game_name: str, owned_games: list) -> dict | None:
+        """Busca un juego por nombre en la lista de juegos del usuario.
+
+        Realiza una búsqueda insensible a mayúsculas/minúsculas.
+
+        Args:
+            game_name: Nombre del juego a buscar.
+            owned_games: Lista de juegos devuelta por get_owned_games.
+
+        Returns:
+            Diccionario con la info del juego si se encuentra, None en caso contrario.
+        """
         game_name_lower = game_name.lower()
         for game in owned_games:
-            if game_name_lower in game.get('name', '').lower():
-                logger.debug("Juego encontrado: %s (appid=%d)", game.get('name'), game.get('appid', 0))
+            if game_name_lower in game.get("name", "").lower():
                 return game
-        logger.warning("Juego '%s' no encontrado en la librería", game_name)
         return None
+
+    @cached(ttl=3600)
+    def search_store_game(self, term: str) -> dict:
+        """Busca un juego por nombre en la tienda pública de Steam.
+        
+        Útil para obtener el appid de un juego que el usuario no posee necesariamente.
+        
+        Args:
+            term: Término de búsqueda (ej: 'Elden Ring')
+            
+        Returns:
+            Respuesta JSON de la tienda de Steam.
+        """
+        url = "https://store.steampowered.com/api/storesearch/"
+        try:
+            response = requests.get(url, params={"term": term, "l": "spanish", "cc": "AR"})
+            response.raise_for_status()
+            return response.json()
+        except requests.RequestException as e:
+            logger.error("Error en storesearch para '%s': %s", term, e)
+            return {"error": str(e)}
+
+    @cached(ttl=3600)
+    def get_store_app_details(self, appid: int) -> dict:
+        """Obtiene los detalles públicos de la tienda para un juego específico.
+        
+        Incluye precio, descripción, plataformas y categorías.
+        
+        Args:
+            appid: ID del juego en Steam.
+            
+        Returns:
+            Respuesta JSON con los detalles de la tienda.
+        """
+        url = "https://store.steampowered.com/api/appdetails"
+        try:
+            response = requests.get(url, params={"appids": appid, "l": "spanish", "cc": "AR"})
+            response.raise_for_status()
+            return response.json()
+        except requests.RequestException as e:
+            logger.error("Error en appdetails para appid %s: %s", appid, e)
+            return {"error": str(e)}

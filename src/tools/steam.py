@@ -94,11 +94,69 @@ def get_current_game_tool(query: str = "") -> str:
     return "El usuario no está jugando a ningún juego en este momento o su perfil está oculto."
 
 
+def get_store_info_tool(query: str) -> str:
+    """Busca información de un juego en la tienda de Steam."""
+    logger.debug("Herramienta invocada: get_store_info, query: %s", query)
+    api = _get_steam_api()
+    
+    search_result = api.search_store_game(query)
+    if "error" in search_result:
+        return f"Error al buscar en la tienda: {search_result['error']}"
+        
+    items = search_result.get("items", [])
+    if not items:
+        return f"No se encontró el juego '{query}' en la tienda de Steam."
+        
+    # Tomamos el primer resultado que tenga appid
+    best_match = items[0]
+    appid = best_match.get("id")
+    
+    if not appid:
+        return f"Se encontraron resultados pero no se pudo determinar el AppID para '{query}'."
+    
+    details_result = api.get_store_app_details(appid)
+    if "error" in details_result:
+        return f"Error al obtener detalles del juego: {details_result['error']}"
+        
+    app_data = details_result.get(str(appid), {})
+    if not app_data.get("success"):
+        return "No se pudo obtener la información detallada del juego en la tienda."
+        
+    data = app_data.get("data", {})
+    name = data.get("name", "Desconocido")
+    desc = data.get("short_description", "")
+    
+    price_overview = data.get("price_overview")
+    if price_overview:
+        price = price_overview.get("final_formatted", "Gratis/No disponible")
+        discount = price_overview.get("discount_percent", 0)
+        price_str = f"{price} (-{discount}%)" if discount > 0 else price
+    else:
+        price_str = "Gratis o no disponible"
+        
+    platforms = data.get("platforms", {})
+    plats = []
+    if platforms.get("windows"): plats.append("Windows")
+    if platforms.get("mac"): plats.append("Mac")
+    if platforms.get("linux"): plats.append("Linux")
+    
+    categories = [cat.get("description") for cat in data.get("categories", [])][:5]
+    
+    return (
+        f"🎮 {name}\n"
+        f"💰 Precio: {price_str}\n"
+        f"💻 Plataformas: {', '.join(plats)}\n"
+        f"🏷️ Categorías: {', '.join(categories)}\n\n"
+        f"📝 Descripción: {desc}"
+    )
+
+
 def get_steam_tools():
     """Devuelve la lista de herramientas de Steam disponibles para el agente."""
     return [
         Tool(name="get_steam_profile", func=get_profile_tool, description="Obtiene información del perfil del usuario de Steam."),
         Tool(name="get_steam_games", func=get_games_tool, description="Obtiene la lista de juegos y horas jugadas del usuario."),
         Tool(name="get_steam_achievements", func=get_achievements_tool, description="Obtiene logros de un juego. Input: nombre exacto del juego."),
-        Tool(name="get_current_game", func=get_current_game_tool, description="Verifica si el usuario está jugando a algún juego en este momento y devuelve su nombre.")
+        Tool(name="get_current_game", func=get_current_game_tool, description="Verifica si el usuario está jugando a algún juego en este momento y devuelve su nombre."),
+        Tool(name="get_store_info", func=get_store_info_tool, description="Busca un juego en la Tienda de Steam para ver su precio, descripción y si tiene descuentos. Input: nombre del juego.")
     ]
