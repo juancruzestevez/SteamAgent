@@ -20,3 +20,4 @@ youtube-transcript-api>=0.6.0    # (Para la Card 1.2 próximamente)
 python-dotenv>=1.0.0             # Gestión de .env
 pydantic>=2.10.0                 # Validación de datos
 pydantic-settings>=2.7.0         # BaseSettings (config desde .env)
+youtube-transcript-api==1.2.4

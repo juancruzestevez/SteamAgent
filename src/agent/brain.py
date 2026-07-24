@@ -18,6 +18,7 @@ from src.config.settings import settings
 from src.agent.memory import create_memory
 from src.tools.search import get_search_tools
 from src.tools.steam import get_steam_tools
+from src.tools.youtube import get_youtube_tools
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +63,7 @@ class SteamAgent:
         print(f"🚀 Usando motor: {provider.capitalize()} ({model} - ReAct)")
 
         # --- Herramientas ---
-        self.tools = get_steam_tools() + get_search_tools()
+        self.tools = get_steam_tools() + get_search_tools() + get_youtube_tools()
 
         # --- Memoria conversacional ---
         self.memory = create_memory(max_messages=settings.max_memory_messages)
