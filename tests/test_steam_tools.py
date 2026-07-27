@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import patch, MagicMock
 
 # Importamos las herramientas a testear
-from src.tools.steam import get_profile_tool, get_games_tool, get_current_game_tool, get_store_info_tool
+from src.tools.steam import get_profile_tool, get_games_tool, get_current_game_tool, get_store_info_tool, get_backlog_tool
 
 # --- Tests ---
 @patch("src.tools.steam._get_steam_api")
@@ -114,3 +114,23 @@ def test_get_store_info_tool_success(mock_get_api):
     assert "ARS$ 2000 (-50%)" in result
     assert "Windows" in result
     assert "Un jugador" in result
+
+@patch("src.tools.steam._get_steam_api")
+def test_get_backlog_tool_success(mock_get_api):
+    """Verifica que el backlog devuelva solo juegos con menos de 60 minutos."""
+    mock_api = MagicMock()
+    mock_api.get_owned_games.return_value = {
+        "game_count": 3,
+        "games": [
+            {"name": "Juego Nuevo 1", "playtime_forever": 0},
+            {"name": "Juego Nuevo 2", "playtime_forever": 30},
+            {"name": "Juego Viejo", "playtime_forever": 600}
+        ]
+    }
+    mock_get_api.return_value = mock_api
+
+    result = get_backlog_tool("")
+    
+    assert "Juego Nuevo 1" in result
+    assert "Juego Nuevo 2" in result
+    assert "Juego Viejo" not in result

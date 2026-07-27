@@ -94,6 +94,41 @@ def get_current_game_tool(query: str = "") -> str:
     return "El usuario no está jugando a ningún juego en este momento o su perfil está oculto."
 
 
+def get_backlog_tool(query: str = "") -> str:
+    """Obtiene una lista de juegos que el usuario posee pero apenas ha jugado (backlog)."""
+    logger.debug("Herramienta invocada: get_backlog")
+    api = _get_steam_api()
+    data = api.get_owned_games()
+    
+    if "error" in data:
+        return f"Error: {data['error']}"
+        
+    games = data.get("games", [])
+    if not games:
+        return "El usuario no tiene juegos en su biblioteca."
+        
+    # Filtrar juegos con menos de 1 hora (60 minutos) jugada
+    backlog = [g for g in games if g.get("playtime_forever", 0) < 60]
+    
+    if not backlog:
+        return "¡Increíble! El usuario ha jugado más de una hora a todos los juegos de su biblioteca."
+        
+    # Ordenar para que los juegos con 0 horas salgan primero
+    backlog.sort(key=lambda x: x.get("playtime_forever", 0))
+    
+    import random
+    # Tomamos una muestra aleatoria de hasta 15 juegos para no desbordar el prompt
+    sample = random.sample(backlog, min(15, len(backlog)))
+    
+    response = f"Juegos pendientes en la biblioteca (menos de 1h jugada). Total ocultos: {len(backlog)}\nAquí hay una muestra aleatoria:\n"
+    for game in sample:
+        playtime = game.get("playtime_forever", 0)
+        time_str = f"{playtime} min" if playtime > 0 else "Nunca jugado"
+        response += f"- {game.get('name', 'Desconocido')} ({time_str})\n"
+        
+    return response
+
+
 def get_store_info_tool(query: str) -> str:
     """Busca información de un juego en la tienda de Steam."""
     logger.debug("Herramienta invocada: get_store_info, query: %s", query)
@@ -155,7 +190,8 @@ def get_steam_tools():
     """Devuelve la lista de herramientas de Steam disponibles para el agente."""
     return [
         Tool(name="get_steam_profile", func=get_profile_tool, description="Obtiene información del perfil del usuario de Steam."),
-        Tool(name="get_steam_games", func=get_games_tool, description="Obtiene la lista de juegos y horas jugadas del usuario."),
+        Tool(name="get_steam_games", func=get_games_tool, description="Obtiene la lista de juegos y horas jugadas del usuario (los más jugados)."),
+        Tool(name="get_steam_backlog", func=get_backlog_tool, description="Obtiene una muestra de juegos que el usuario posee pero que NUNCA ha jugado o tiene menos de 1 hora de juego. Útil para recomendar qué jugar de su propia biblioteca."),
         Tool(name="get_steam_achievements", func=get_achievements_tool, description="Obtiene logros de un juego. Input: nombre exacto del juego."),
         Tool(name="get_current_game", func=get_current_game_tool, description="Verifica si el usuario está jugando a algún juego en este momento y devuelve su nombre."),
         Tool(name="get_store_info", func=get_store_info_tool, description="Busca un juego en la Tienda de Steam para ver su precio, descripción y si tiene descuentos. Input: nombre del juego.")
