@@ -19,6 +19,7 @@ from src.agent.memory import create_memory
 from src.tools.search import get_search_tools
 from src.tools.steam import get_steam_tools
 from src.tools.youtube import get_youtube_tools
+from src.tools.rag import get_rag_tools
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +64,7 @@ class SteamAgent:
         print(f"🚀 Usando motor: {provider.capitalize()} ({model} - ReAct)")
 
         # --- Herramientas ---
-        self.tools = get_steam_tools() + get_search_tools() + get_youtube_tools()
+        self.tools = get_steam_tools() + get_search_tools() + get_youtube_tools() + get_rag_tools()
 
         # --- Memoria conversacional ---
         self.memory = create_memory(max_messages=settings.max_memory_messages)
@@ -99,6 +100,7 @@ REGLAS DE CONTEXTO MUY IMPORTANTES:
   2. Usa 'get_steam_backlog' para ver qué juegos posee pero no ha jugado.
   3. Recomienda 2 o 3 opciones de su backlog justificando por qué le gustarían según sus gustos.
   4. Si también le recomiendas juegos nuevos (que no posee), usa tu conocimiento interno y LUEGO usa 'get_store_info' para decirle el precio actual y plataforma.
+- Si buscas en internet usando 'search_web' y encuentras que la mejor respuesta está en un enlace muy específico a una Wiki (fandom, fextralife, etc.) que no se muestra entero en el resumen de búsqueda, usa la herramienta 'read_and_search_wiki' pasándole esa URL y la pregunta exacta para extraer la respuesta sin leer toda la página.
 
 Para usar una herramienta, debes usar EXACTAMENTE este formato:
 
