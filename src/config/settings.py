@@ -23,6 +23,9 @@ class Settings(BaseSettings):
     steam_api_key: str
     steam_user_id: str
 
+    # Discord (Opcional)
+    discord_token: str | None = None
+
     # --- Claves de LLM (opcionales individualmente) ---
     groq_api_key: str | None = None
     google_api_key: str | None = None
