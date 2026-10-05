@@ -16,15 +16,22 @@ def main():
     agent = SteamAgent()
     logger.info("Agente instanciado y listo para recibir consultas")
 
-    while True:
-        user_input = input("\nUsted: ")
-        if user_input.lower() in ["salir", "exit", "quit"]:
-            logger.info("Usuario finalizó la sesión")
-            break
-        logger.debug("Consulta recibida: %s", user_input)
-        response = agent.chat(user_input)
-        logger.debug("Respuesta generada (%d caracteres)", len(response))
-        print(f"\nAgente: {response}")
+    try:
+        while True:
+            user_input = input("\nUsted: ")
+            if user_input.lower() in ["salir", "exit", "quit"]:
+                logger.info("Usuario finalizó la sesión")
+                print("\n👋 ¡Hasta luego! Sesión finalizada.")
+                break
+            if not user_input.strip():
+                continue
+            logger.debug("Consulta recibida: %s", user_input)
+            response = agent.chat(user_input)
+            logger.debug("Respuesta generada (%d caracteres)", len(response))
+            print(f"\nAgente: {response}")
+    except (KeyboardInterrupt, EOFError):
+        logger.info("Sesión interrumpida por el usuario con Ctrl+C")
+        print("\n\n👋 ¡Hasta luego! Sesión finalizada.")
 
 if __name__ == "__main__":
     main()
