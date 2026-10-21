@@ -34,3 +34,8 @@ pygame==2.6.1
 pynput==1.8.2
 sounddevice==0.5.5
 soundfile==0.14.0
+
+# --- DESKTOP GUI ---
+pywebview>=6.2.0
+PyQt6>=6.11.0
+PyQt6-WebEngine>=6.11.0

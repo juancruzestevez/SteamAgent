@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html class="dark" lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>SteamAgent Desktop - AI Gaming Companion</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Google Fonts Inter & JetBrains Mono -->
+  <link href="https://fonts.googleapis.com" rel="preconnect"/>
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            obsidian: {
+              base: '#0a0d14',
+              surface: '#0f141f',
+              card: '#141a26',
+              border: '#1f293d',
+              borderLight: '#2c3954'
+            },
+            steam: {
+              blue: '#38bdf8',
+              hover: '#0284c7',
+              dark: '#171a21',
+              light: '#2a475e'
+            },
+            neonEmerald: {
+              DEFAULT: '#10b981',
+              glow: 'rgba(16, 185, 129, 0.45)'
+            },
+            electricViolet: {
+              DEFAULT: '#8b5cf6',
+              glow: 'rgba(139, 92, 246, 0.45)'
+            }
+          },
+          boxShadow: {
+            'glow-emerald': '0 0 24px -3px rgba(16, 185, 129, 0.4)',
+            'glow-violet': '0 0 24px -3px rgba(139, 92, 246, 0.45)',
+            'glow-steam': '0 0 20px -2px rgba(56, 189, 248, 0.4)',
+            'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.45)'
+          },
+          animation: {
+            'pulse-glow': 'pulseGlow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'wave-bar': 'waveBar 1.2s ease-in-out infinite alternate',
+          },
+          keyframes: {
+            pulseGlow: {
+              '0%, 100%': { opacity: '1', transform: 'scale(1)' },
+              '50%': { opacity: '.65', transform: 'scale(0.96)' },
+            },
+            waveBar: {
+              '0%': { height: '6px' },
+              '100%': { height: '24px' }
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 20, 31, 0.6);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #232d42;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #38bdf8;
+    }
+
+    .glass-panel {
+      background: linear-gradient(135deg, rgba(20, 26, 38, 0.72) 0%, rgba(13, 17, 25, 0.88) 100%);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    .glass-input {
+      background: rgba(10, 13, 20, 0.75);
+      border: 1px solid #1f293d;
+      transition: all 0.2s ease;
+    }
+    .glass-input:focus {
+      border-color: #38bdf8;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
+    }
+
+    .audio-bar {
+      transition: height 0.15s ease;
+    }
+  </style>
+</head>
+<body class="bg-[#07090e] text-slate-200 antialiased font-sans select-none flex items-center justify-center min-h-screen p-0 overflow-hidden">
+
+  <!-- Main Window Frame (Compact desktop window 960x680) -->
+  <div class="w-[960px] h-[680px] bg-obsidian-base border border-obsidian-borderLight/40 shadow-2xl overflow-hidden flex flex-col relative ring-1 ring-white/10">
+
+    <!-- Top Window Chrome / Header Bar -->
+    <header class="h-14 bg-obsidian-surface/90 border-b border-obsidian-border flex items-center justify-between px-5 backdrop-blur-md z-30 shrink-0">
+      <!-- Brand & Title -->
+      <div class="flex items-center gap-3">
+        <div class="relative flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-tr from-electricViolet/30 to-steam-blue/20 border border-steam-blue/40 shadow-glow-steam">
+          <i class="w-5 h-5 text-steam-blue" data-lucide="gamepad-2"></i>
+          <span class="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-neonEmerald shadow-[0_0_8px_#10b981]"></span>
+        </div>
+        <div class="flex flex-col">
+          <div class="flex items-center gap-2">
+            <span class="text-base font-bold tracking-tight text-white flex items-center">
+              Steam<span class="text-steam-blue">Agent</span>
+            </span>
+            <span class="text-[10px] uppercase font-mono tracking-wider font-semibold px-1.5 py-0.5 rounded bg-steam-blue/15 text-steam-blue border border-steam-blue/30">v1.2 PRO</span>
+          </div>
+          <span class="text-[11px] text-slate-400 font-medium tracking-wide">AI Gaming Companion</span>
+        </div>
+      </div>
+
+      <!-- Center Status Badge -->
+      <div class="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full border border-rose-500/40 bg-rose-500/10 shadow-[0_0_14px_rgba(239,68,68,0.2)] transition-all duration-300" id="serviceStatusBadge">
+        <span class="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-[0_0_10px_#ef4444]" id="statusPulseDot"></span>
+        <span class="text-xs font-semibold text-rose-300 flex items-center gap-1.5 font-mono" id="statusText">
+          <span>● DETENIDO</span>
+          <span class="text-[10px] text-rose-300/80 font-sans font-normal">(Haz clic en Activar Asistente)</span>
+        </span>
+      </div>
+
+      <!-- Window Control Action Buttons -->
+      <div class="flex items-center gap-1.5">
+        <button onclick="minimizeWindow()" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800/60 transition" title="Minimizar ventana">
+          <i class="w-4 h-4" data-lucide="minus"></i>
+        </button>
+        <button onclick="closeWindow()" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition" title="Cerrar ventana">
+          <i class="w-4 h-4" data-lucide="x"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- App Body Content Area (No scroll, compact grid) -->
+    <main class="flex-1 p-4 grid grid-cols-12 gap-3.5 overflow-hidden">
+
+      <!-- HERO CARD: Estado del Servicio & Control Global -->
+      <section class="col-span-12 glass-panel rounded-xl p-3.5 flex items-center justify-between border-obsidian-borderLight relative overflow-hidden group">
+        <div class="absolute -right-20 -top-20 w-60 h-60 bg-gradient-to-br from-rose-500/10 to-transparent blur-3xl pointer-events-none transition-all duration-700" id="heroAura"></div>
+        <div class="flex items-center gap-5 z-10">
+          <!-- Big Toggle Power Switch Button -->
+          <button class="flex items-center gap-3 px-5 py-2.5 rounded-xl font-bold text-sm tracking-wide transition-all duration-300 bg-gradient-to-r from-rose-600 to-red-700 hover:from-rose-500 hover:to-red-600 text-white shadow-[0_0_20px_rgba(239,68,68,0.4)] border border-rose-400/40 active:scale-[0.98]" id="toggleServiceBtn" onclick="toggleAssistantService()">
+            <div class="w-5 h-5 rounded-full bg-black/20 flex items-center justify-center" id="serviceIconWrap">
+              <i class="w-3.5 h-3.5 text-white" data-lucide="power"></i>
+            </div>
+            <span id="serviceBtnLabel">ACTIVAR ASISTENTE</span>
+          </button>
+
+          <!-- Voice / Audio Visualizer Wave -->
+          <div class="flex items-center gap-3 bg-obsidian-base/80 px-4 py-2 rounded-xl border border-obsidian-border">
+            <div class="flex items-center gap-1.5 h-6 opacity-30" id="audioVisualizer">
+              <span class="w-1 bg-neonEmerald rounded-full audio-bar h-2 animate-wave-bar" style="animation-delay: 0.1s"></span>
+              <span class="w-1 bg-neonEmerald rounded-full audio-bar h-5 animate-wave-bar" style="animation-delay: 0.3s"></span>
+              <span class="w-1 bg-neonEmerald rounded-full audio-bar h-3 animate-wave-bar" style="animation-delay: 0.2s"></span>
+              <span class="w-1 bg-neonEmerald rounded-full audio-bar h-6 animate-wave-bar" style="animation-delay: 0.4s"></span>
+              <span class="w-1 bg-neonEmerald rounded-full audio-bar h-2 animate-wave-bar" style="animation-delay: 0.15s"></span>
+              <span class="w-1 bg-neonEmerald rounded-full audio-bar h-4 animate-wave-bar" style="animation-delay: 0.25s"></span>
+            </div>
+            <div class="flex flex-col">
+              <span class="text-[11px] font-semibold text-slate-200">Reconocimiento por Voz</span>
+              <span class="text-[10px] text-slate-400 flex items-center gap-1">
+                <i class="w-3 h-3 text-neonEmerald" data-lucide="mic"></i> Micrófono / Whisper Local
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Shortcut & Performance badges -->
+        <div class="flex items-center gap-3 z-10">
+          <div class="flex items-center gap-2 px-3 py-1.5 bg-electricViolet/10 border border-electricViolet/30 rounded-lg">
+            <i class="w-3.5 h-3.5 text-electricViolet" data-lucide="sparkles"></i>
+            <span class="text-xs text-purple-200 font-medium">Atajo Global:</span>
+            <kbd class="px-2 py-0.5 rounded bg-electricViolet/25 border border-electricViolet/50 text-white font-mono text-xs font-bold shadow-inner">
+              F9
+            </kbd>
+          </div>
+          <div class="hidden md:flex items-center gap-2 px-3 py-1.5 bg-slate-900/60 border border-obsidian-border rounded-lg text-xs font-mono text-slate-400">
+            <span class="flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Modo: <span class="text-slate-200">Push-To-Talk</span>
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <!-- LEFT COLUMN: AI Configuration Panel -->
+      <section class="col-span-6 glass-panel rounded-xl p-4 flex flex-col justify-between border-obsidian-borderLight">
+        <div class="space-y-3.5">
+          <div class="flex items-center justify-between pb-1 border-b border-obsidian-border">
+            <div class="flex items-center gap-2">
+              <div class="w-6 h-6 rounded-lg bg-electricViolet/20 border border-electricViolet/40 flex items-center justify-center">
+                <i class="w-3.5 h-3.5 text-electricViolet" data-lucide="bot"></i>
+              </div>
+              <h2 class="text-sm font-bold text-white tracking-wide">Configuración de Inteligencia Artificial</h2>
+            </div>
+            <span class="text-[10px] font-mono text-electricViolet bg-electricViolet/10 px-2 py-0.5 rounded border border-electricViolet/30">Motor LLM</span>
+          </div>
+
+          <!-- Provider Tabs -->
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1.5">Proveedor de IA</label>
+            <div class="grid grid-cols-4 gap-1.5 bg-obsidian-base/90 p-1 rounded-xl border border-obsidian-border" id="providerSelector">
+              <!-- OpenAI -->
+              <button id="tab-openai" class="provider-tab flex flex-col items-center justify-center py-2 px-1 rounded-lg border border-electricViolet/50 bg-electricViolet/15 text-white transition-all text-center" onclick="selectProvider('openai')">
+                <i class="w-4 h-4 text-emerald-400 mb-0.5" data-lucide="cpu"></i>
+                <span class="text-[11px] font-semibold leading-tight">OpenAI</span>
+                <span class="text-[9px] text-slate-400">ChatGPT</span>
+              </button>
+              <!-- Groq -->
+              <button id="tab-groq" class="provider-tab flex flex-col items-center justify-center py-2 px-1 rounded-lg border border-transparent hover:border-obsidian-borderLight text-slate-400 hover:text-slate-200 transition-all text-center" onclick="selectProvider('groq')">
+                <i class="w-4 h-4 text-amber-400 mb-0.5" data-lucide="zap"></i>
+                <span class="text-[11px] font-semibold leading-tight">Groq</span>
+                <span class="text-[9px] text-slate-500">Llama 3</span>
+              </button>
+              <!-- Google Gemini -->
+              <button id="tab-gemini" class="provider-tab flex flex-col items-center justify-center py-2 px-1 rounded-lg border border-transparent hover:border-obsidian-borderLight text-slate-400 hover:text-slate-200 transition-all text-center" onclick="selectProvider('gemini')">
+                <i class="w-4 h-4 text-sky-400 mb-0.5" data-lucide="sparkle"></i>
+                <span class="text-[11px] font-semibold leading-tight">Google</span>
+                <span class="text-[9px] text-slate-500">Gemini</span>
+              </button>
+              <!-- Anthropic -->
+              <button id="tab-anthropic" class="provider-tab flex flex-col items-center justify-center py-2 px-1 rounded-lg border border-transparent hover:border-obsidian-borderLight text-slate-400 hover:text-slate-200 transition-all text-center" onclick="selectProvider('anthropic')">
+                <i class="w-4 h-4 text-rose-400 mb-0.5" data-lucide="brain-circuit"></i>
+                <span class="text-[11px] font-semibold leading-tight">Anthropic</span>
+                <span class="text-[9px] text-slate-500">Claude</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- API Key Input -->
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="text-xs font-medium text-slate-300 flex items-center gap-1.5" for="aiApiKey">
+                <span>API Secret Key</span>
+                <span class="text-[10px] text-electricViolet font-mono" id="providerBadgeLabel">(OpenAI)</span>
+              </label>
+              <a id="providerKeyLink" class="text-[10px] text-steam-blue hover:underline" href="https://platform.openai.com/api-keys" target="_blank">Obtener key</a>
+            </div>
+            <div class="relative flex items-center">
+              <div class="absolute left-3 text-slate-500 pointer-events-none">
+                <i class="w-4 h-4" data-lucide="lock"></i>
+              </div>
+              <input class="glass-input w-full pl-9 pr-10 py-2 rounded-lg text-xs font-mono text-slate-100 placeholder-slate-600 focus:outline-none" id="aiApiKey" placeholder="sk-..." type="password" oninput="onKeyInputChange()"/>
+              <button class="absolute right-2.5 text-slate-400 hover:text-white p-1 rounded transition" onclick="togglePasswordVisibility('aiApiKey', this)" type="button">
+                <i class="w-4 h-4" data-lucide="eye"></i>
+              </button>
+            </div>
+            <p class="text-[10px] text-slate-500 mt-1 flex items-center gap-1">
+              <i class="w-3 h-3 text-emerald-400" data-lucide="shield-check"></i> Clave guardada localmente en tu archivo .env
+            </p>
+          </div>
+
+          <!-- Model Selector Dropdown -->
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1" for="aiModelSelect">Modelo de Respuesta</label>
+            <div class="relative">
+              <select class="glass-input w-full px-3 py-2 rounded-lg text-xs font-sans text-slate-200 focus:outline-none appearance-none cursor-pointer" id="aiModelSelect">
+                <option class="bg-obsidian-surface text-white" value="gpt-4o-mini">gpt-4o-mini (Ultra rápido, recomendado para partidas)</option>
+                <option class="bg-obsidian-surface text-white" value="gpt-4o">gpt-4o (Máxima precisión táctica y visión)</option>
+              </select>
+              <div class="absolute right-3 top-2.5 text-slate-400 pointer-events-none">
+                <i class="w-4 h-4" data-lucide="chevron-down"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-2 border-t border-obsidian-border/80 flex items-center justify-between text-[11px] text-slate-400">
+          <span class="flex items-center gap-1">
+            <i class="w-3.5 h-3.5 text-slate-400" data-lucide="sliders"></i> Estilo de Asistente:
+          </span>
+          <div class="flex items-center gap-1.5">
+            <span class="px-2 py-0.5 rounded-full bg-slate-800 text-slate-200 text-[10px] border border-slate-700">Sommelier Gamer</span>
+            <span class="px-2 py-0.5 rounded-full bg-electricViolet/10 text-electricViolet text-[10px] border border-electricViolet/30">Voz Neuronal</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT COLUMN: Steam Integration Panel -->
+      <section class="col-span-6 glass-panel rounded-xl p-4 flex flex-col justify-between border-obsidian-borderLight">
+        <div class="space-y-3.5">
+          <div class="flex items-center justify-between pb-1 border-b border-obsidian-border">
+            <div class="flex items-center gap-2">
+              <div class="w-6 h-6 rounded-lg bg-steam-blue/20 border border-steam-blue/40 flex items-center justify-center">
+                <i class="w-3.5 h-3.5 text-steam-blue" data-lucide="gamepad"></i>
+              </div>
+              <h2 class="text-sm font-bold text-white tracking-wide">Integración con Steam</h2>
+            </div>
+            <span class="text-[10px] font-mono text-steam-blue bg-steam-blue/10 px-2 py-0.5 rounded border border-steam-blue/30">SteamWorks API</span>
+          </div>
+
+          <!-- Connected Steam Profile Card -->
+          <div class="p-2.5 rounded-xl bg-gradient-to-r from-steam-dark to-obsidian-card border border-steam-blue/30 flex items-center justify-between" id="steamProfileCard">
+            <div class="flex items-center gap-3">
+              <div class="relative">
+                <img id="steamAvatar" alt="Avatar" class="w-10 h-10 rounded-lg object-cover border border-steam-blue bg-slate-800" src="https://avatars.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_full.jpg"/>
+                <span id="steamOnlineDot" class="absolute -bottom-1 -right-1 w-3 h-3 rounded-full bg-neonEmerald border-2 border-obsidian-card shadow-[0_0_8px_#10b981]"></span>
+              </div>
+              <div>
+                <div class="flex items-center gap-1.5">
+                  <span id="steamPersonaName" class="text-xs font-bold text-white tracking-wide">Cargando perfil...</span>
+                  <span id="steamStatusTag" class="text-[9px] px-1.5 py-0.2 rounded bg-neonEmerald/20 text-emerald-400 border border-neonEmerald/30 font-semibold font-mono">CONECTADO</span>
+                </div>
+                <p class="text-[11px] text-slate-400">Estado: <span id="steamCurrentGame" class="text-steam-blue font-semibold">En línea</span></p>
+              </div>
+            </div>
+            <button onclick="refreshSteamData()" class="p-2 rounded-lg hover:bg-steam-blue/20 text-steam-blue transition border border-transparent hover:border-steam-blue/30" title="Sincronizar perfil">
+              <i class="w-4 h-4" data-lucide="refresh-cw"></i>
+            </button>
+          </div>
+
+          <!-- Steam Web API Key Input -->
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="text-xs font-medium text-slate-300" for="steamApiKey">Steam Web API Key</label>
+              <a class="text-[10px] text-steam-blue hover:underline flex items-center gap-0.5" href="https://steamcommunity.com/dev/apikey" target="_blank">
+                Generar Key <i class="w-2.5 h-2.5" data-lucide="external-link"></i>
+              </a>
+            </div>
+            <div class="relative flex items-center">
+              <div class="absolute left-3 text-slate-500 pointer-events-none">
+                <i class="w-4 h-4" data-lucide="key"></i>
+              </div>
+              <input class="glass-input w-full pl-9 pr-10 py-2 rounded-lg text-xs font-mono text-slate-100 placeholder-slate-600 focus:outline-none" id="steamApiKey" placeholder="32 caracteres hex..." type="password"/>
+              <button class="absolute right-2.5 text-slate-400 hover:text-white p-1 rounded transition" onclick="togglePasswordVisibility('steamApiKey', this)" type="button">
+                <i class="w-4 h-4" data-lucide="eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- SteamID64 Input -->
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="text-xs font-medium text-slate-300" for="steamIdInput">SteamID64 / Community User ID</label>
+              <button class="text-[10px] text-steam-blue hover:underline flex items-center gap-1" onclick="showSteamIdHelp()" type="button">
+                <i class="w-3 h-3" data-lucide="help-circle"></i> ¿Cómo obtener mi SteamID?
+              </button>
+            </div>
+            <div class="relative flex items-center">
+              <div class="absolute left-3 text-slate-500 pointer-events-none">
+                <i class="w-4 h-4" data-lucide="user-check"></i>
+              </div>
+              <input class="glass-input w-full pl-9 pr-3 py-2 rounded-lg text-xs font-mono text-slate-100 placeholder-slate-600 focus:outline-none" id="steamIdInput" placeholder="76561198..." type="text"/>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-2 border-t border-obsidian-border/80 flex items-center justify-between text-[11px] text-slate-400">
+          <span class="flex items-center gap-1">
+            <i class="w-3.5 h-3.5 text-steam-blue" data-lucide="database"></i> Detección en Tiempo Real:
+          </span>
+          <span class="text-slate-300 font-mono text-[10px]">Activo en segundo plano</span>
+        </div>
+      </section>
+    </main>
+
+    <!-- Bottom Actions Footer Bar -->
+    <footer class="h-16 bg-obsidian-surface/95 border-t border-obsidian-border px-6 flex items-center justify-between z-30 shrink-0">
+      <div class="flex items-center gap-4 text-xs">
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#10b981]" id="connTestIcon"></span>
+          <span class="text-slate-300 font-medium" id="connTestLabel">Servicios Operativos</span>
+        </div>
+        <span class="text-slate-700">|</span>
+        <span class="text-slate-400 text-[11px] font-mono">Archivo sincronizado: <span class="text-slate-200">.env</span></span>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <button class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-slate-200 border border-steam-blue/40 hover:border-steam-blue bg-obsidian-card hover:bg-steam-blue/10 transition-all active:scale-[0.98]" id="testConnBtn" onclick="testAllConnections()">
+          <i class="w-3.5 h-3.5 text-steam-blue" data-lucide="activity"></i>
+          <span>Probar Conexiones</span>
+        </button>
+
+        <button class="flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-steam-blue via-sky-500 to-electricViolet hover:opacity-95 shadow-glow-steam border border-sky-300/40 transition-all active:scale-[0.98]" id="saveConfigBtn" onclick="saveConfiguration()">
+          <i class="w-4 h-4" data-lucide="save"></i>
+          <span>Guardar Configuración</span>
+        </button>
+      </div>
+    </footer>
+
+    <!-- Floating Interactive Toast Notification -->
+    <div class="absolute bottom-20 left-1/2 -translate-x-1/2 px-4 py-2.5 rounded-xl bg-obsidian-card/95 border border-emerald-500/50 shadow-2xl backdrop-blur-xl flex items-center gap-3 transform translate-y-12 opacity-0 pointer-events-none transition-all duration-300 z-50" id="toastNotification">
+      <div class="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center shrink-0">
+        <i class="w-3.5 h-3.5 text-emerald-400" data-lucide="check"></i>
+      </div>
+      <div class="flex flex-col">
+        <span class="text-xs font-bold text-white" id="toastTitle">Configuración guardada</span>
+        <span class="text-[11px] text-slate-300" id="toastMessage">Variables sincronizadas en .env correctamente.</span>
+      </div>
+    </div>
+
+    <!-- Modal Tooltip for SteamID Help -->
+    <div class="hidden absolute inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-6" id="steamIdModal">
+      <div class="bg-obsidian-surface border border-obsidian-borderLight w-[460px] rounded-xl p-5 shadow-2xl space-y-4">
+        <div class="flex items-center justify-between border-b border-obsidian-border pb-2">
+          <div class="flex items-center gap-2">
+            <i class="w-4 h-4 text-steam-blue" data-lucide="info"></i>
+            <h3 class="text-sm font-bold text-white">¿Cómo encontrar tu SteamID64?</h3>
+          </div>
+          <button class="text-slate-400 hover:text-white" onclick="closeSteamIdHelp()">
+            <i class="w-4 h-4" data-lucide="x"></i>
+          </button>
+        </div>
+        <div class="text-xs text-slate-300 space-y-2">
+          <p>1. Abre tu cliente de <strong>Steam</strong> y haz clic en tu nombre de perfil arriba a la derecha.</p>
+          <p>2. Selecciona <strong>"Detalles de la cuenta"</strong>.</p>
+          <p>3. Justo debajo de tu nombre de cuenta verás tu <span class="text-steam-blue font-mono font-bold">Steam ID: 76561198...</span> de 17 dígitos.</p>
+          <p class="text-slate-400 text-[11px]">Copia ese número completo y pégalo en el campo correspondente.</p>
+        </div>
+        <div class="flex justify-end pt-2">
+          <button class="px-4 py-1.5 rounded-lg bg-steam-blue text-obsidian-base font-bold text-xs hover:bg-sky-400 transition" onclick="closeSteamIdHelp()">
+            Entendido
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Interactive Logic Bridge -->
+  <script>
+    lucide.createIcons();
+
+    // Store state
+    let currentProvider = 'openai';
+    let isServiceActive = false;
+    let apiKeys = {
+      openai: '',
+      groq: '',
+      gemini: '',
+      anthropic: ''
+    };
+
+    const providerLinks = {
+      openai: 'https://platform.openai.com/api-keys',
+      groq: 'https://console.groq.com/keys',
+      gemini: 'https://aistudio.google.com/app/apikey',
+      anthropic: 'https://console.anthropic.com/settings/keys'
+    };
+
+    const modelOptions = {
+      openai: [
+        { val: 'gpt-4o-mini', label: 'gpt-4o-mini (Ultra rápido, recomendado para partidas)' },
+        { val: 'gpt-4o', label: 'gpt-4o (Máxima precisión táctica y visión)' }
+      ],
+      groq: [
+        { val: 'llama-3.3-70b-versatile', label: 'Llama 3.3 70B (Velocidad extrema en tiempo real)' },
+        { val: 'llama-3.1-8b-instant', label: 'Llama 3.1 8B Instant (Ultra baja latencia)' }
+      ],
+      gemini: [
+        { val: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash (Respuesta instantánea)' },
+        { val: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro (Ventana de contexto extendida)' }
+      ],
+      anthropic: [
+        { val: 'claude-3-5-sonnet', label: 'Claude 3.5 Sonnet (Estrategias complejas)' },
+        { val: 'claude-3-haiku', label: 'Claude 3 Haiku (Respuestas rápidas)' }
+      ]
+    };
+
+    // Initialize application data from Python bridge
+    async function initApp() {
+      if (window.pywebview && window.pywebview.api) {
+        try {
+          const config = await window.pywebview.api.get_config();
+          apiKeys.openai = config.openai_api_key || '';
+          apiKeys.groq = config.groq_api_key || '';
+          apiKeys.gemini = config.google_api_key || '';
+          apiKeys.anthropic = config.anthropic_api_key || '';
+
+          document.getElementById('steamApiKey').value = config.steam_api_key || '';
+          document.getElementById('steamIdInput').value = config.steam_user_id || '';
+
+          if (config.llm_provider && ['openai', 'groq', 'gemini', 'anthropic'].includes(config.llm_provider)) {
+            selectProvider(config.llm_provider);
+          } else {
+            selectProvider('openai');
+          }
+
+          updateSteamProfileUI(config.steam_profile);
+          updateServiceStatusUI(Boolean(config.is_running));
+        } catch (e) {
+          console.error("Error al cargar config inicial:", e);
+        }
+      }
+    }
+
+    window.addEventListener('pywebviewready', initApp);
+    window.addEventListener('DOMContentLoaded', () => {
+      // Fallback si no está pywebview (vista previa en navegador)
+      if (!window.pywebview) {
+        selectProvider('openai');
+      }
+    });
+
+    function selectProvider(providerKey) {
+      currentProvider = providerKey;
+      
+      document.querySelectorAll('.provider-tab').forEach(tab => {
+        tab.className = "provider-tab flex flex-col items-center justify-center py-2 px-1 rounded-lg border border-transparent hover:border-obsidian-borderLight text-slate-400 hover:text-slate-200 transition-all text-center";
+      });
+
+      const activeTab = document.getElementById(`tab-${providerKey}`);
+      if (activeTab) {
+        activeTab.className = "provider-tab flex flex-col items-center justify-center py-2 px-1 rounded-lg border border-electricViolet/50 bg-electricViolet/15 text-white transition-all text-center";
+      }
+
+      const badge = document.getElementById('providerBadgeLabel');
+      const providerNames = { openai: 'OpenAI', groq: 'Groq', gemini: 'Google Gemini', anthropic: 'Anthropic' };
+      badge.textContent = `(${providerNames[providerKey]})`;
+
+      const link = document.getElementById('providerKeyLink');
+      link.href = providerLinks[providerKey] || '#';
+
+      // Load key for this provider
+      document.getElementById('aiApiKey').value = apiKeys[providerKey] || '';
+
+      // Update models
+      const select = document.getElementById('aiModelSelect');
+      select.innerHTML = '';
+      (modelOptions[providerKey] || []).forEach(opt => {
+        const el = document.createElement('option');
+        el.value = opt.val;
+        el.textContent = opt.label;
+        el.className = "bg-obsidian-surface text-white";
+        select.appendChild(el);
+      });
+      lucide.createIcons();
+    }
+
+    function onKeyInputChange() {
+      apiKeys[currentProvider] = document.getElementById('aiApiKey').value;
+    }
+
+    function updateSteamProfileUI(profile) {
+      if (profile && profile.personaname) {
+        document.getElementById('steamPersonaName').textContent = profile.personaname;
+        if (profile.avatar) {
+          document.getElementById('steamAvatar').src = profile.avatar;
+        }
+        document.getElementById('steamCurrentGame').textContent = profile.current_game || 'En línea';
+        document.getElementById('steamStatusTag').textContent = 'CONECTADO';
+        document.getElementById('steamStatusTag').className = "text-[9px] px-1.5 py-0.2 rounded bg-neonEmerald/20 text-emerald-400 border border-neonEmerald/30 font-semibold font-mono";
+      } else {
+        document.getElementById('steamPersonaName').textContent = 'No conectado';
+        document.getElementById('steamCurrentGame').textContent = 'Verifica tus credenciales';
+        document.getElementById('steamStatusTag').textContent = 'PENDIENTE';
+        document.getElementById('steamStatusTag').className = "text-[9px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 font-semibold font-mono";
+      }
+    }
+
+    function updateServiceStatusUI(active) {
+      isServiceActive = active;
+      const toggleServiceBtn = document.getElementById('toggleServiceBtn');
+      const serviceBtnLabel = document.getElementById('serviceBtnLabel');
+      const statusPulseDot = document.getElementById('statusPulseDot');
+      const statusText = document.getElementById('statusText');
+      const serviceStatusBadge = document.getElementById('serviceStatusBadge');
+      const audioVisualizer = document.getElementById('audioVisualizer');
+      const heroAura = document.getElementById('heroAura');
+
+      if (isServiceActive) {
+        toggleServiceBtn.className = "flex items-center gap-3 px-5 py-2.5 rounded-xl font-bold text-sm tracking-wide transition-all duration-300 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white shadow-glow-emerald border border-emerald-400/40 active:scale-[0.98]";
+        serviceBtnLabel.textContent = "ASISTENTE ACTIVO";
+
+        serviceStatusBadge.className = "flex items-center gap-2.5 px-3.5 py-1.5 rounded-full border border-neonEmerald/40 bg-neonEmerald/10 shadow-[0_0_14px_rgba(16,185,129,0.2)] transition-all duration-300";
+        statusPulseDot.className = "w-2.5 h-2.5 rounded-full bg-neonEmerald animate-pulse shadow-[0_0_10px_#10b981]";
+        statusText.innerHTML = `<span>EN SEGUNDO PLANO</span><span class="text-[10px] text-emerald-400/80 font-sans font-normal">(Presiona <span class="text-white font-mono bg-emerald-950/80 px-1 py-0.2 rounded border border-emerald-600/40 font-bold">F9</span> en tu juego para hablar)</span>`;
+        statusText.className = "text-xs font-semibold text-emerald-300 flex items-center gap-1.5 font-mono";
+
+        audioVisualizer.className = "flex items-center gap-1.5 h-6 opacity-100";
+        heroAura.className = "absolute -right-20 -top-20 w-60 h-60 bg-gradient-to-br from-neonEmerald/20 via-electricViolet/15 to-transparent blur-3xl pointer-events-none transition-all duration-700";
+      } else {
+        toggleServiceBtn.className = "flex items-center gap-3 px-5 py-2.5 rounded-xl font-bold text-sm tracking-wide transition-all duration-300 bg-gradient-to-r from-rose-600 to-red-700 hover:from-rose-500 hover:to-red-600 text-white shadow-[0_0_20px_rgba(239,68,68,0.4)] border border-rose-400/40 active:scale-[0.98]";
+        serviceBtnLabel.textContent = "ACTIVAR ASISTENTE";
+
+        serviceStatusBadge.className = "flex items-center gap-2.5 px-3.5 py-1.5 rounded-full border border-rose-500/40 bg-rose-500/10 shadow-[0_0_14px_rgba(239,68,68,0.2)] transition-all duration-300";
+        statusPulseDot.className = "w-2.5 h-2.5 rounded-full bg-rose-500 shadow-[0_0_10px_#ef4444]";
+        statusText.innerHTML = `<span>● DETENIDO</span><span class="text-[10px] text-rose-300/80 font-sans font-normal">(El servicio de voz está pausado)</span>`;
+        statusText.className = "text-xs font-semibold text-rose-300 flex items-center gap-1.5 font-mono";
+
+        audioVisualizer.className = "flex items-center gap-1.5 h-6 opacity-30";
+        heroAura.className = "absolute -right-20 -top-20 w-60 h-60 bg-gradient-to-br from-rose-500/10 to-transparent blur-3xl pointer-events-none transition-all duration-700";
+      }
+      lucide.createIcons();
+    }
+
+    async function toggleAssistantService() {
+      if (window.pywebview && window.pywebview.api) {
+        const res = await window.pywebview.api.toggle_agent();
+        updateServiceStatusUI(res.running);
+        showToast(res.running ? "Asistente Activado" : "Asistente Pausado", res.message);
+      } else {
+        updateServiceStatusUI(!isServiceActive);
+      }
+    }
+
+    async function saveConfiguration() {
+      onKeyInputChange();
+      const saveBtn = document.getElementById('saveConfigBtn');
+      saveBtn.classList.add('scale-95');
+      setTimeout(() => saveBtn.classList.remove('scale-95'), 150);
+
+      const payload = {
+        llm_provider: currentProvider,
+        openai_api_key: apiKeys.openai,
+        groq_api_key: apiKeys.groq,
+        google_api_key: apiKeys.gemini,
+        anthropic_api_key: apiKeys.anthropic,
+        steam_api_key: document.getElementById('steamApiKey').value,
+        steam_user_id: document.getElementById('steamIdInput').value
+      };
+
+      if (window.pywebview && window.pywebview.api) {
+        const res = await window.pywebview.api.save_config(payload);
+        if (res.steam_profile) {
+          updateSteamProfileUI(res.steam_profile);
+        }
+        showToast("Configuración guardada", res.message || "Variables sincronizadas en .env correctamente.");
+      } else {
+        showToast("Configuración guardada", "Modo simulación: variables guardadas.");
+      }
+    }
+
+    async function testAllConnections() {
+      const btn = document.getElementById('testConnBtn');
+      const icon = document.getElementById('connTestIcon');
+      const label = document.getElementById('connTestLabel');
+
+      btn.disabled = true;
+      btn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 text-steam-blue animate-spin"></i><span>Verificando...</span>`;
+      lucide.createIcons();
+
+      if (window.pywebview && window.pywebview.api) {
+        try {
+          const res = await window.pywebview.api.test_connection();
+          btn.disabled = false;
+          if (res.ai_ok && res.steam_ok) {
+            btn.innerHTML = `<i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-400"></i><span class="text-emerald-300">Conexiones OK</span>`;
+            icon.className = "w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_10px_#10b981]";
+            label.textContent = "Servicios Operativos";
+            showToast("Verificación Exitosa", res.message);
+          } else {
+            btn.innerHTML = `<i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-amber-400"></i><span class="text-amber-300">Detalles detectados</span>`;
+            icon.className = "w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_10px_#f59e0b]";
+            label.textContent = "Revisa las claves";
+            showToast("Aviso de Conexión", res.message);
+          }
+        } catch (err) {
+          btn.disabled = false;
+          btn.innerHTML = `<i data-lucide="x-circle" class="w-3.5 h-3.5 text-rose-400"></i><span class="text-rose-300">Error</span>`;
+          showToast("Error de prueba", String(err));
+        }
+      } else {
+        setTimeout(() => {
+          btn.disabled = false;
+          btn.innerHTML = `<i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-400"></i><span class="text-emerald-300">Conexiones OK</span>`;
+          icon.className = "w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_10px_#10b981]";
+          label.textContent = "Servicios Operativos";
+          showToast("Verificación Completada", "Simulación: APIs respondiendo correctamente.");
+          lucide.createIcons();
+        }, 1200);
+      }
+
+      setTimeout(() => {
+        btn.innerHTML = `<i data-lucide="activity" class="w-3.5 h-3.5 text-steam-blue"></i><span>Probar Conexiones</span>`;
+        lucide.createIcons();
+      }, 4000);
+    }
+
+    async function refreshSteamData() {
+      if (window.pywebview && window.pywebview.api) {
+        const config = await window.pywebview.api.get_config();
+        updateSteamProfileUI(config.steam_profile);
+        showToast("Perfil Actualizado", "Datos de Steam sincronizados.");
+      }
+    }
+
+    function togglePasswordVisibility(inputId, btn) {
+      const input = document.getElementById(inputId);
+      const isPassword = input.type === 'password';
+      input.type = isPassword ? 'text' : 'password';
+      btn.innerHTML = isPassword 
+        ? '<i data-lucide="eye-off" class="w-4 h-4"></i>' 
+        : '<i data-lucide="eye" class="w-4 h-4"></i>';
+      lucide.createIcons();
+    }
+
+    function minimizeWindow() {
+      if (window.pywebview && window.pywebview.api) {
+        window.pywebview.api.minimize_window();
+      }
+    }
+
+    function closeWindow() {
+      if (window.pywebview && window.pywebview.api) {
+        window.pywebview.api.close_window();
+      }
+    }
+
+    let toastTimeout;
+    function showToast(title, message) {
+      const toast = document.getElementById('toastNotification');
+      document.getElementById('toastTitle').textContent = title;
+      document.getElementById('toastMessage').textContent = message;
+
+      toast.classList.remove('translate-y-12', 'opacity-0', 'pointer-events-none');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-12', 'opacity-0', 'pointer-events-none');
+      }, 3500);
+    }
+
+    function showSteamIdHelp() {
+      document.getElementById('steamIdModal').classList.remove('hidden');
+    }
+    function closeSteamIdHelp() {
+      document.getElementById('steamIdModal').classList.add('hidden');
+    }
+  </script>
+</body>
+</html>
